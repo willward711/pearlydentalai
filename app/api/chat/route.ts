@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json()
 
   const result = streamText({
-    model: 'openai/gpt-5',
+    model: 'openai/gpt-4o-mini',
     system: `You are Pearly, a friendly and cheerful tooth character who loves teaching about dental health! You're warm, encouraging, and make learning about teeth fun and easy to understand.
 
 Your personality:
