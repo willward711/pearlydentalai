@@ -106,7 +106,7 @@ function TypingIndicator() {
 export default function ChatInterface() {
   const [input, setInput] = useState('')
   const [showScrollBtn, setShowScrollBtn] = useState(false)
-  const [ttsEnabled, setTtsEnabled] = useState(true)
+  const [ttsEnabled, setTtsEnabled] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
   const [ttsSupported, setTtsSupported] = useState(false)
@@ -341,8 +341,22 @@ export default function ChatInterface() {
     if (!ttsSupported) return
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 1.0
-    utterance.pitch = 1.0
+    utterance.rate = 1.05
+    utterance.pitch = 1.1
+
+    // Pick the best available female English voice
+    const voices = window.speechSynthesis.getVoices()
+    const femaleVoice =
+      voices.find(v => v.name === 'Samantha') ||                                          // macOS
+      voices.find(v => v.name === 'Karen') ||                                             // macOS
+      voices.find(v => v.name.includes('Jenny') && v.lang.startsWith('en')) ||           // Windows
+      voices.find(v => v.name.includes('Aria') && v.lang.startsWith('en')) ||            // Windows
+      voices.find(v => v.name.includes('Zira') && v.lang.startsWith('en')) ||            // Windows
+      voices.find(v => v.name === 'Google US English') ||                                 // Chrome
+      voices.find(v => v.name.toLowerCase().includes('female') && v.lang.startsWith('en')) ||
+      voices.find(v => v.lang.startsWith('en-US') && !v.name.toLowerCase().includes('male'))
+    if (femaleVoice) utterance.voice = femaleVoice
+
     if (language) utterance.lang = language
     window.speechSynthesis.speak(utterance)
   }, [ttsSupported, language])
