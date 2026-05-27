@@ -13,7 +13,6 @@ const nunito = Nunito({
 export const metadata: Metadata = {
   title: 'Dental Education GPT - Meet Pearly!',
   description: 'Learn dentistry with Pearly, your friendly AI dental education assistant',
-  generator: 'v0.app',
   icons: {
     icon: [
       {

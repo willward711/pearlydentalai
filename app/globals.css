@@ -137,6 +137,11 @@
   background-size: 400% 400%;
   animation: gradientFlow 18s ease infinite;
 }
+.dark .animated-gradient-bg {
+  background: linear-gradient(-45deg, #050d1a, #0a1528, #071020, #0c1a32, #060e1c, #091426);
+  background-size: 400% 400%;
+  animation: gradientFlow 18s ease infinite;
+}
 
 @keyframes gradientFlow {
   0%   { background-position: 0% 50%; }
