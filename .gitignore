@@ -30,3 +30,8 @@ next-env.d.ts
 /*.png
 /*.jpg
 .playwright-mcp/
+# Secrets — never commit
+*.pem
+*.key
+secrets.*
+*.secret
