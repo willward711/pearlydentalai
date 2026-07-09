@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { Send, Sparkles, ChevronDown, Mic, MicOff, Volume2, VolumeX, Sun, Moon, SquarePen, History, X, Trash2, LogIn, LogOut } from 'lucide-react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
+import { LANGUAGES } from '@/lib/languages'
 
 type SavedConversation = {
   id: string
@@ -30,22 +31,6 @@ function timeAgo(ts: number): string {
 
 const HISTORY_KEY = 'pearly_chat_history'
 const LANG_KEY = 'pearly_lang'
-
-const LANGUAGES = [
-  { code: '', label: 'Auto-detect' },
-  { code: 'en-US', label: 'English (US)' },
-  { code: 'en-GB', label: 'English (UK)' },
-  { code: 'es-ES', label: 'Spanish' },
-  { code: 'fr-FR', label: 'French' },
-  { code: 'de-DE', label: 'German' },
-  { code: 'it-IT', label: 'Italian' },
-  { code: 'pt-BR', label: 'Portuguese (BR)' },
-  { code: 'zh-CN', label: 'Chinese (Mandarin)' },
-  { code: 'ja-JP', label: 'Japanese' },
-  { code: 'ko-KR', label: 'Korean' },
-  { code: 'ar-SA', label: 'Arabic' },
-  { code: 'hi-IN', label: 'Hindi' },
-]
 
 const suggestedTopics = [
   {
