@@ -348,26 +348,27 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
 
   const speak = useCallback(async (text: string) => {
     stopSpeaking()
+    // Pointing the audio element at the URL lets the browser start playing
+    // while OpenAI is still generating the rest of the clip
+    const audio = new Audio('/api/tts?text=' + encodeURIComponent(text.slice(0, 4000)))
+    audio.preload = 'auto'
+    ttsAudioRef.current = audio
+
+    let fellBack = false
+    const fallback = () => {
+      if (fellBack) return
+      fellBack = true
+      if (ttsAudioRef.current === audio) ttsAudioRef.current = null
+      speakWithBrowser(text)
+    }
+    audio.onerror = fallback
+    audio.onended = () => {
+      if (ttsAudioRef.current === audio) ttsAudioRef.current = null
+    }
     try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      })
-      if (!res.ok) throw new Error('TTS request failed')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const audio = new Audio(url)
-      ttsAudioRef.current = audio
-      const cleanup = () => {
-        URL.revokeObjectURL(url)
-        if (ttsAudioRef.current === audio) ttsAudioRef.current = null
-      }
-      audio.onended = cleanup
-      audio.onerror = cleanup
       await audio.play()
     } catch {
-      speakWithBrowser(text)
+      fallback()
     }
   }, [stopSpeaking, speakWithBrowser])
 
