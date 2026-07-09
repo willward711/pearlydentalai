@@ -18,7 +18,8 @@ export function splitSources(text: string): { body: string; sources: Source[] } 
     if (match) {
       const sources: Source[] = []
       for (const m of match[1].matchAll(MD_LINK)) {
-        sources.push({ label: m[1], url: m[2] })
+        // Only http(s) URLs become clickable pills — blocks javascript: etc.
+        if (/^https?:\/\//i.test(m[2])) sources.push({ label: m[1], url: m[2] })
       }
       const body = [...lines.slice(0, i), ...lines.slice(i + 1)].join('\n').trimEnd()
       return { body, sources }
