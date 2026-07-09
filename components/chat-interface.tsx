@@ -692,18 +692,18 @@ export default function ChatInterface() {
         </div>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6 pearly-welcome-in">
-          <div className="relative mb-7 pearly-pulse-ring">
+          <div className="pearly-bob relative mb-5">
             <div className="relative w-28 h-28 rounded-full overflow-hidden ring-4 ring-white/80 shadow-2xl">
               <Image src="/pearly.jpg" alt="Pearly the dental AI assistant" fill className="object-cover" priority />
             </div>
           </div>
 
-          <h1 className="text-4xl font-extrabold text-white text-center leading-tight mb-2 drop-shadow-md">
-            Hi, I&apos;m Pearly!
-          </h1>
-          <p className="text-white/80 text-base text-center mb-8 max-w-xs leading-relaxed">
-            Your friendly guide to all things dental. Ask me anything about teeth, gums, and oral health.
-          </p>
+          <div className="pearly-bubble relative bg-white/95 dark:bg-slate-800/95 rounded-2xl px-6 py-4 shadow-xl mb-8 max-w-xs text-center">
+            <p className="text-lg font-extrabold text-slate-800 dark:text-slate-100">Hi! I&apos;m Pearly 🦷</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+              What can I help you with today? Ask me anything about teeth, gums, and oral health.
+            </p>
+          </div>
 
           <div className="flex flex-wrap justify-center gap-2.5 max-w-md mb-10">
             {suggestedTopics.map((topic) => (

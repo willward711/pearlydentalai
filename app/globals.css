@@ -192,6 +192,28 @@
   animation: pearly-dot 1.2s ease-in-out infinite;
 }
 
+/* Welcome: gentle avatar bob */
+@keyframes pearly-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+.pearly-bob { animation: pearly-bob 3.2s ease-in-out infinite; }
+
+/* Welcome: speech bubble tail */
+.pearly-bubble::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-bottom: 9px solid rgba(255, 255, 255, 0.95);
+}
+.dark .pearly-bubble::after {
+  border-bottom-color: rgba(30, 41, 59, 0.95);
+}
+
 /* Chat surface background */
 .pearly-chat-bg {
   background-color: #f0f6ff;
