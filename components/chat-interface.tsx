@@ -11,6 +11,7 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { LANGUAGES } from '@/lib/languages'
 import HistorySidebar, { type SavedConversation } from '@/components/history-sidebar'
+import PearlyMessage, { stripForSpeech } from '@/components/pearly-message'
 
 const HISTORY_KEY = 'pearly_chat_history'
 const LANG_KEY = 'pearly_lang'
@@ -346,8 +347,11 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
     window.speechSynthesis.speak(utterance)
   }, [language])
 
-  const speak = useCallback(async (text: string) => {
+  const speak = useCallback(async (rawText: string) => {
     stopSpeaking()
+    // Strip markdown, URLs, and the sources line so the voice reads clean prose
+    const text = stripForSpeech(rawText)
+    if (!text) return
     // Pointing the audio element at the URL lets the browser start playing
     // while OpenAI is still generating the rest of the clip
     const audio = new Audio('/api/tts?text=' + encodeURIComponent(text.slice(0, 4000)))
@@ -809,12 +813,11 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
                       : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-2xl rounded-bl-sm shadow-sm border border-slate-100 dark:border-slate-700',
                   )}
                 >
-                  <div className="whitespace-pre-wrap">
-                    {message.parts.map((part, i) => {
-                      if (part.type === 'text') return <span key={i}>{(part as any).text}</span>
-                      return null
-                    })}
-                  </div>
+                  {isUser ? (
+                    <div className="whitespace-pre-wrap">{messageText}</div>
+                  ) : (
+                    <PearlyMessage text={messageText} />
+                  )}
                   {!isUser && ttsSupported && (
                     <button
                       type="button"
