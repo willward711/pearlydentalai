@@ -101,6 +101,7 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
   const lastSpokenMessageIdRef = useRef<string | null>(null)
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
@@ -151,7 +152,8 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) setSpeechSupported(true)
-    if ('speechSynthesis' in window) setTtsSupported(true)
+    // OpenAI TTS plays through an <audio> element, which every browser supports
+    setTtsSupported(true)
   }, [])
 
   // Auto-scroll on new messages
@@ -245,12 +247,21 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
     })
   }, [user])
 
-  const loadConversation = useCallback((conv: SavedConversation) => {
+  // Stop any speech currently playing (OpenAI audio or browser fallback)
+  const stopSpeaking = useCallback(() => {
+    if (ttsAudioRef.current) {
+      ttsAudioRef.current.pause()
+      ttsAudioRef.current = null
+    }
     window.speechSynthesis?.cancel()
+  }, [])
+
+  const loadConversation = useCallback((conv: SavedConversation) => {
+    stopSpeaking()
     setMessages(conv.messages)
     currentSessionIdRef.current = user ? conv.id : null
     setSidebarOpen(false)
-  }, [setMessages, user])
+  }, [setMessages, user, stopSpeaking])
 
   const deleteConversation = useCallback(async (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -268,11 +279,11 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
 
   const startNewChat = useCallback(() => {
     saveCurrentConversation(messages)
-    window.speechSynthesis?.cancel()
+    stopSpeaking()
     setMessages([])
     currentSessionIdRef.current = null
     setSidebarOpen(false)
-  }, [messages, saveCurrentConversation, setMessages])
+  }, [messages, saveCurrentConversation, setMessages, stopSpeaking])
 
   // Auth handlers
   const handleSignIn = async (e: React.FormEvent) => {
@@ -310,9 +321,9 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
     }
   }
 
-  // TTS helpers
-  const speak = useCallback((text: string) => {
-    if (!ttsSupported) return
+  // TTS helpers — browser speech is the fallback when OpenAI TTS fails
+  const speakWithBrowser = useCallback((text: string) => {
+    if (!('speechSynthesis' in window)) return
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.rate = 1.05
@@ -333,7 +344,32 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
 
     if (language) utterance.lang = language
     window.speechSynthesis.speak(utterance)
-  }, [ttsSupported, language])
+  }, [language])
+
+  const speak = useCallback(async (text: string) => {
+    stopSpeaking()
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      })
+      if (!res.ok) throw new Error('TTS request failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      ttsAudioRef.current = audio
+      const cleanup = () => {
+        URL.revokeObjectURL(url)
+        if (ttsAudioRef.current === audio) ttsAudioRef.current = null
+      }
+      audio.onended = cleanup
+      audio.onerror = cleanup
+      await audio.play()
+    } catch {
+      speakWithBrowser(text)
+    }
+  }, [stopSpeaking, speakWithBrowser])
 
   useEffect(() => {
     if (!ttsEnabled || !ttsSupported || isLoading) return
@@ -348,6 +384,9 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
     lastSpokenMessageIdRef.current = lastMessage.id
     speak(text)
   }, [messages, isLoading, ttsEnabled, ttsSupported, speak])
+
+  // Stop audio if the user navigates away from the chat
+  useEffect(() => () => stopSpeaking(), [stopSpeaking])
 
   // Voice input
   const startListening = useCallback(() => {
@@ -701,7 +740,7 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
             type="button"
             size="icon"
             onClick={() => {
-              if (ttsEnabled) window.speechSynthesis.cancel()
+              if (ttsEnabled) stopSpeaking()
               setTtsEnabled((prev) => !prev)
             }}
             aria-label={ttsEnabled ? 'Mute Pearly voice' : 'Unmute Pearly voice'}
