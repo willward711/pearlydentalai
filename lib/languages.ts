@@ -1,0 +1,15 @@
+export const LANGUAGES = [
+  { code: '', label: 'Auto-detect' },
+  { code: 'en-US', label: 'English (US)' },
+  { code: 'en-GB', label: 'English (UK)' },
+  { code: 'es-ES', label: 'Spanish' },
+  { code: 'fr-FR', label: 'French' },
+  { code: 'de-DE', label: 'German' },
+  { code: 'it-IT', label: 'Italian' },
+  { code: 'pt-BR', label: 'Portuguese (BR)' },
+  { code: 'zh-CN', label: 'Chinese (Mandarin)' },
+  { code: 'ja-JP', label: 'Japanese' },
+  { code: 'ko-KR', label: 'Korean' },
+  { code: 'ar-SA', label: 'Arabic' },
+  { code: 'hi-IN', label: 'Hindi' },
+]
