@@ -103,7 +103,7 @@ function TypingIndicator() {
   )
 }
 
-export default function ChatInterface() {
+export default function ChatInterface({ initialQuestion }: { initialQuestion?: string }) {
   const [input, setInput] = useState('')
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [ttsEnabled, setTtsEnabled] = useState(false)
@@ -144,6 +144,14 @@ export default function ChatInterface() {
   const hasMessages = messages.length > 0
 
   useEffect(() => setMounted(true), [])
+
+  // Auto-send a question passed via /chat?q= (from landing page topic pills)
+  const initialSentRef = useRef(false)
+  useEffect(() => {
+    if (!initialQuestion?.trim() || initialSentRef.current) return
+    initialSentRef.current = true
+    sendMessage({ text: initialQuestion })
+  }, [initialQuestion, sendMessage])
 
   // Auth: listen for session changes
   useEffect(() => {
