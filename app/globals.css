@@ -210,3 +210,37 @@
 .pearly-input-wrap:focus-within {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18), 0 4px 24px rgba(59, 130, 246, 0.10);
 }
+
+/* Landing: floating hero avatar */
+@keyframes pearly-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+.pearly-float { animation: pearly-float 5s ease-in-out infinite; }
+
+/* Landing: slow-drifting doodles */
+@keyframes pearly-drift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  33%  { transform: translate(14px, -18px) rotate(8deg); }
+  66%  { transform: translate(-10px, -30px) rotate(-6deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.pearly-drift { animation: pearly-drift 16s ease-in-out infinite; }
+
+/* Landing: feature card hover lift */
+.pearly-card { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; }
+.pearly-card:hover { transform: translateY(-6px); }
+
+/* Respect reduced motion everywhere */
+@media (prefers-reduced-motion: reduce) {
+  .animated-gradient-bg,
+  .pearly-float,
+  .pearly-drift,
+  .pearly-bob,
+  .pearly-welcome-in,
+  .pearly-msg-in,
+  .pearly-pulse-ring::before {
+    animation: none !important;
+  }
+  .pearly-card:hover { transform: none; }
+}
