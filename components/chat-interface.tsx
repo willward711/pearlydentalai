@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Send, Sparkles, ChevronDown, Mic, MicOff, Volume2, VolumeX, Sun, Moon, SquarePen, History, X, Trash2, LogIn, LogOut } from 'lucide-react'
+import { Send, Sparkles, ChevronDown, Mic, MicOff, Volume2, VolumeX, SquarePen, History, X, Trash2, LogIn } from 'lucide-react'
+import ChatSettings from '@/components/chat-settings'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { LANGUAGES } from '@/lib/languages'
@@ -112,8 +112,6 @@ export default function ChatInterface() {
   const [signupSuccess, setSignupSuccess] = useState(false)
 
   const currentSessionIdRef = useRef<string | null>(null)
-
-  const { theme, setTheme } = useTheme()
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -430,24 +428,6 @@ export default function ChatInterface() {
 
   // ── Sub-components called as functions (not as JSX) to prevent remount on each render ──
 
-  const ThemeToggleBtn = ({ className }: { className?: string }) => {
-    if (!mounted) return <div className={cn('w-9 h-9', className)} />
-    return (
-      <Button
-        type="button"
-        size="icon"
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        className={cn(
-          'rounded-xl bg-transparent hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 shadow-none border-0',
-          className,
-        )}
-      >
-        {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-      </Button>
-    )
-  }
-
   const MicButton = () => (
     <>
       {speechSupported && (
@@ -580,24 +560,6 @@ export default function ChatInterface() {
           )}
         </div>
 
-        <div className="flex-shrink-0 border-t border-slate-200 dark:border-slate-700 px-4 py-3">
-          <label htmlFor="lang-select" className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
-            Language
-          </label>
-          <select
-            id="lang-select"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="w-full text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-2.5 py-1.5 outline-none focus:ring-2 focus:ring-blue-400 cursor-pointer"
-          >
-            {LANGUAGES.map((lang) => (
-              <option key={lang.code} value={lang.code}>{lang.label}</option>
-            ))}
-          </select>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 leading-relaxed">
-            Applies to voice input and text-to-speech
-          </p>
-        </div>
       </div>
     </>
   )
@@ -717,34 +679,15 @@ export default function ChatInterface() {
         </div>
 
         <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
-          {ThemeToggleBtn({ className: 'text-white/70 hover:text-white hover:bg-white/15 dark:hover:bg-white/15' })}
-          {!authLoading && (
-            user ? (
-              <div className="flex items-center gap-1">
-                <div
-                  className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xs font-bold"
-                  title={user.email}
-                >
-                  {user.email?.[0].toUpperCase()}
-                </div>
-                <button
-                  onClick={handleSignOut}
-                  aria-label="Sign out"
-                  title="Sign out"
-                  className="p-1.5 rounded-xl text-white/70 hover:text-white hover:bg-white/15 transition-all"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white/80 hover:text-white bg-white/15 hover:bg-white/25 border border-white/20 hover:border-white/30 text-xs font-semibold transition-all"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                Sign In
-              </button>
-            )
+          <ChatSettings language={language} onLanguageChange={setLanguage} user={user} onSignOut={handleSignOut} variant="light" />
+          {!authLoading && !user && (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white/80 hover:text-white bg-white/15 hover:bg-white/25 border border-white/20 hover:border-white/30 text-xs font-semibold transition-all"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              Sign In
+            </button>
           )}
         </div>
 
@@ -842,29 +785,18 @@ export default function ChatInterface() {
         >
           <SquarePen className="w-5 h-5" />
         </Button>
-        {ThemeToggleBtn({})}
-        {!authLoading && (
-          user ? (
-            <button
-              onClick={handleSignOut}
-              title={`Sign out (${user.email})`}
-              aria-label="Sign out"
-              className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center text-white text-xs font-bold transition-colors shadow-sm"
-            >
-              {user.email?.[0].toUpperCase()}
-            </button>
-          ) : (
-            <Button
-              type="button"
-              size="icon"
-              onClick={() => setShowAuthModal(true)}
-              title="Sign in"
-              aria-label="Sign in"
-              className="rounded-xl bg-transparent hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 shadow-none border-0"
-            >
-              <LogIn className="w-5 h-5" />
-            </Button>
-          )
+        <ChatSettings language={language} onLanguageChange={setLanguage} user={user} onSignOut={handleSignOut} />
+        {!authLoading && !user && (
+          <Button
+            type="button"
+            size="icon"
+            onClick={() => setShowAuthModal(true)}
+            title="Sign in"
+            aria-label="Sign in"
+            className="rounded-xl bg-transparent hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 shadow-none border-0"
+          >
+            <LogIn className="w-5 h-5" />
+          </Button>
         )}
       </header>
 
