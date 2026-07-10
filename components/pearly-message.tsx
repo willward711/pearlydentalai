@@ -80,9 +80,9 @@ export default function PearlyMessage({ text }: { text: string }) {
                 {children}
               </a>
             ),
-            h1: ({ children }) => <p className="font-bold">{children}</p>,
-            h2: ({ children }) => <p className="font-bold">{children}</p>,
-            h3: ({ children }) => <p className="font-semibold">{children}</p>,
+            h1: ({ children }) => <p className="text-lg font-bold mt-1">{children}</p>,
+            h2: ({ children }) => <p className="text-base font-bold mt-1">{children}</p>,
+            h3: ({ children }) => <p className="text-[15px] font-semibold mt-0.5">{children}</p>,
           }}
         >
           {body}
