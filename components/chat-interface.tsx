@@ -693,7 +693,8 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
           {InputBar({ compact: false })}
 
           <p className="mt-5 text-xs text-white/55 text-center max-w-sm leading-relaxed">
-            For educational purposes only — not a substitute for professional dental advice.
+            Pearly is an AI and can make mistakes. For educational purposes only — not a substitute for
+            professional dental advice, diagnosis, or treatment.
           </p>
         </div>
       </div>
@@ -865,7 +866,8 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
       <div className="flex-shrink-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-700/80">
         {InputBar({ compact: true })}
         <p className="pb-3 text-center text-xs text-slate-400 dark:text-slate-500 px-4">
-          For education only — not professional dental advice
+          Pearly is an AI and can make mistakes — for education only, not professional advice, diagnosis, or
+          treatment. In an emergency, call 911.
         </p>
       </div>
     </div>
