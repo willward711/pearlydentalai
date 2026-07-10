@@ -11,7 +11,8 @@ import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { LANGUAGES } from '@/lib/languages'
 import HistorySidebar, { type SavedConversation } from '@/components/history-sidebar'
-import PearlyMessage, { stripForSpeech } from '@/components/pearly-message'
+import PearlyMessage from '@/components/pearly-message'
+import { useSpeech } from '@/lib/use-speech'
 
 const HISTORY_KEY = 'pearly_chat_history'
 const LANG_KEY = 'pearly_lang'
@@ -102,7 +103,9 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
   const lastSpokenMessageIdRef = useRef<string | null>(null)
-  const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
+
+  const speech = useSpeech(language)
+  const { speak, stopSpeaking } = speech
 
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
@@ -248,15 +251,6 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
     })
   }, [user])
 
-  // Stop any speech currently playing (OpenAI audio or browser fallback)
-  const stopSpeaking = useCallback(() => {
-    if (ttsAudioRef.current) {
-      ttsAudioRef.current.pause()
-      ttsAudioRef.current = null
-    }
-    window.speechSynthesis?.cancel()
-  }, [])
-
   const loadConversation = useCallback((conv: SavedConversation) => {
     stopSpeaking()
     setMessages(conv.messages)
@@ -321,60 +315,6 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
       setChatHistory([])
     }
   }
-
-  // TTS helpers — browser speech is the fallback when OpenAI TTS fails
-  const speakWithBrowser = useCallback((text: string) => {
-    if (!('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 1.05
-    utterance.pitch = 1.1
-
-    // Pick the best available female English voice
-    const voices = window.speechSynthesis.getVoices()
-    const femaleVoice =
-      voices.find(v => v.name === 'Samantha') ||                                          // macOS
-      voices.find(v => v.name === 'Karen') ||                                             // macOS
-      voices.find(v => v.name.includes('Jenny') && v.lang.startsWith('en')) ||           // Windows
-      voices.find(v => v.name.includes('Aria') && v.lang.startsWith('en')) ||            // Windows
-      voices.find(v => v.name.includes('Zira') && v.lang.startsWith('en')) ||            // Windows
-      voices.find(v => v.name === 'Google US English') ||                                 // Chrome
-      voices.find(v => v.name.toLowerCase().includes('female') && v.lang.startsWith('en')) ||
-      voices.find(v => v.lang.startsWith('en-US') && !v.name.toLowerCase().includes('male'))
-    if (femaleVoice) utterance.voice = femaleVoice
-
-    if (language) utterance.lang = language
-    window.speechSynthesis.speak(utterance)
-  }, [language])
-
-  const speak = useCallback(async (rawText: string) => {
-    stopSpeaking()
-    // Strip markdown, URLs, and the sources line so the voice reads clean prose
-    const text = stripForSpeech(rawText)
-    if (!text) return
-    // Pointing the audio element at the URL lets the browser start playing
-    // while OpenAI is still generating the rest of the clip
-    const audio = new Audio('/api/tts?text=' + encodeURIComponent(text.slice(0, 4000)))
-    audio.preload = 'auto'
-    ttsAudioRef.current = audio
-
-    let fellBack = false
-    const fallback = () => {
-      if (fellBack) return
-      fellBack = true
-      if (ttsAudioRef.current === audio) ttsAudioRef.current = null
-      speakWithBrowser(text)
-    }
-    audio.onerror = fallback
-    audio.onended = () => {
-      if (ttsAudioRef.current === audio) ttsAudioRef.current = null
-    }
-    try {
-      await audio.play()
-    } catch {
-      fallback()
-    }
-  }, [stopSpeaking, speakWithBrowser])
 
   useEffect(() => {
     if (!ttsEnabled || !ttsSupported || isLoading) return
