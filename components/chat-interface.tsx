@@ -5,7 +5,7 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Send, Sparkles, ChevronDown, Mic, MicOff, Volume2, VolumeX, SquarePen, History, X, LogIn } from 'lucide-react'
+import { Send, Sparkles, ChevronDown, Mic, MicOff, Volume2, VolumeX, SquarePen, History, X, LogIn, AudioLines } from 'lucide-react'
 import ChatSettings from '@/components/chat-settings'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
@@ -13,6 +13,7 @@ import { LANGUAGES } from '@/lib/languages'
 import HistorySidebar, { type SavedConversation } from '@/components/history-sidebar'
 import PearlyMessage from '@/components/pearly-message'
 import { useSpeech } from '@/lib/use-speech'
+import VoiceMode from '@/components/voice-mode'
 
 const HISTORY_KEY = 'pearly_chat_history'
 const LANG_KEY = 'pearly_lang'
@@ -78,6 +79,7 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
   const [showScrollBtn, setShowScrollBtn] = useState(false)
   const [ttsEnabled, setTtsEnabled] = useState(false)
   const [isListening, setIsListening] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
   const [speechSupported, setSpeechSupported] = useState(false)
   const [ttsSupported, setTtsSupported] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -317,7 +319,8 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
   }
 
   useEffect(() => {
-    if (!ttsEnabled || !ttsSupported || isLoading) return
+    // Voice mode speaks replies itself — skip the chat auto-speak while it's open
+    if (!ttsEnabled || !ttsSupported || isLoading || voiceOpen) return
     const lastMessage = messages[messages.length - 1]
     if (!lastMessage || lastMessage.role !== 'assistant') return
     if (lastMessage.id === lastSpokenMessageIdRef.current) return
@@ -328,7 +331,7 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
     if (!text.trim()) return
     lastSpokenMessageIdRef.current = lastMessage.id
     speak(text)
-  }, [messages, isLoading, ttsEnabled, ttsSupported, speak])
+  }, [messages, isLoading, ttsEnabled, ttsSupported, voiceOpen, speak])
 
   // Stop audio if the user navigates away from the chat
   useEffect(() => () => stopSpeaking(), [stopSpeaking])
@@ -446,6 +449,22 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
           style={{ height: '40px' }}
         />
         {MicButton()}
+        {speechSupported && (
+          <Button
+            type="button"
+            size="icon"
+            onClick={() => {
+              stopListening()
+              setVoiceOpen(true)
+            }}
+            disabled={isLoading}
+            aria-label="Start voice conversation"
+            title="Voice conversation"
+            className="flex-shrink-0 rounded-xl w-9 h-9 shadow-sm transition-all duration-200 bg-gradient-to-br from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
+          >
+            <AudioLines className="w-4 h-4" />
+          </Button>
+        )}
         <Button
           type="submit"
           size="icon"
@@ -577,6 +596,16 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
           />
         )}
         {showAuthModal && AuthModal()}
+        {voiceOpen && (
+          <VoiceMode
+            language={language}
+            sendMessage={sendMessage}
+            messages={messages}
+            isLoading={isLoading}
+            speech={speech}
+            onClose={() => setVoiceOpen(false)}
+          />
+        )}
 
         <div className="absolute top-3 left-3 z-10">
           <button
@@ -661,6 +690,16 @@ export default function ChatInterface({ initialQuestion }: { initialQuestion?: s
         />
       )}
       {showAuthModal && AuthModal()}
+      {voiceOpen && (
+        <VoiceMode
+          language={language}
+          sendMessage={sendMessage}
+          messages={messages}
+          isLoading={isLoading}
+          speech={speech}
+          onClose={() => setVoiceOpen(false)}
+        />
+      )}
 
       {/* Header */}
       <header className="flex-shrink-0 flex items-center gap-3 px-5 py-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700/80 shadow-sm z-10">

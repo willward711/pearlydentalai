@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { stripForSpeech } from '@/components/pearly-message'
 
 export type SpeakHandlers = {
@@ -117,5 +117,8 @@ export function useSpeech(language: string) {
     window.speechSynthesis?.cancel()
   }, [])
 
-  return { speak, stopSpeaking, audioEl, source }
+  return useMemo(
+    () => ({ speak, stopSpeaking, audioEl, source }),
+    [speak, stopSpeaking, audioEl, source],
+  )
 }
