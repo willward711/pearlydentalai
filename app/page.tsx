@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, MessageCircleHeart, Mic, Languages, BookmarkCheck, Github, HeartPulse } from 'lucide-react'
+import { ArrowRight, MessageCircleHeart, Mic, Languages, BookmarkCheck, HeartPulse } from 'lucide-react'
 import Doodles from '@/components/landing/doodles'
 
 const features = [
@@ -108,18 +108,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="relative px-6 pb-10 text-center text-sm text-white/60">
-        <p>
-          Built by Will Ward ·{' '}
-          <a
-            href="https://github.com/willward711/pearlydentalai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-white transition-colors"
-          >
-            <Github className="w-3.5 h-3.5" aria-hidden="true" />
-            View the code on GitHub
-          </a>
-        </p>
+        <p>Built by Andrew Ward, BBS · Brigham Young University</p>
       </footer>
     </main>
   )
