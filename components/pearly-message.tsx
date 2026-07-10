@@ -8,6 +8,16 @@ type Source = { label: string; url: string }
 const SOURCES_LINE = /^\s*(?:sources?|references?)\s*:\s*(.*)$/i
 const MD_LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g
 
+// Labels the model uses for inline citations — rendered as pills, skipped in speech
+const SOURCE_LABELS = ['ADA', 'CDC', 'NIH', 'MedlinePlus', 'Mayo Clinic', 'Cleveland Clinic', 'WHO', 'HRSA']
+const CITATION_LINK = new RegExp(`\\*?\\s*\\[(?:${SOURCE_LABELS.join('|')})\\]\\([^)\\s]+\\)`, 'g')
+
+function childText(children: unknown): string {
+  if (typeof children === 'string') return children
+  if (Array.isArray(children)) return children.filter((c) => typeof c === 'string').join('')
+  return ''
+}
+
 // Split a trailing "Sources: [ADA](url), ..." line off the message body
 export function splitSources(text: string): { body: string; sources: Source[] } {
   const lines = text.split('\n')
@@ -34,6 +44,7 @@ export function splitSources(text: string): { body: string; sources: Source[] } 
 export function stripForSpeech(text: string): string {
   const { body } = splitSources(text)
   return body
+    .replace(CITATION_LINK, '') // drop inline citations entirely (don't speak "ADA")
     .replace(MD_LINK, '$1') // keep link text, drop URL
     .replace(/https?:\/\/\S+/g, '') // bare URLs
     .replace(/[a-z0-9.-]+\.(?:gov|org|com|edu|net)\/?\S*/gi, '') // bare domains like findahealthcenter.hrsa.gov
@@ -70,16 +81,34 @@ export default function PearlyMessage({ text }: { text: string }) {
                 <span>{children}</span>
               </li>
             ),
-            a: ({ href, children }) => (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 dark:text-blue-400 underline decoration-blue-300 dark:decoration-blue-600 underline-offset-2 hover:text-blue-600"
-              >
-                {children}
-              </a>
-            ),
+            a: ({ href, children }) => {
+              const label = childText(children)
+              // Inline citation links render as small source pills
+              if (SOURCE_LABELS.includes(label) && href && /^https?:\/\//i.test(href)) {
+                return (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={hostLabel(href)}
+                    className="inline-flex items-center gap-1 px-1.5 py-px ml-0.5 rounded-full bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-[10px] font-medium text-slate-500 dark:text-slate-300 align-[2px] whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-600 hover:text-slate-700 dark:hover:text-slate-100 transition-colors no-underline"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-emerald-400 flex-shrink-0" aria-hidden="true" />
+                    {label}
+                  </a>
+                )
+              }
+              return (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 dark:text-blue-400 underline decoration-blue-300 dark:decoration-blue-600 underline-offset-2 hover:text-blue-600"
+                >
+                  {children}
+                </a>
+              )
+            },
             h1: ({ children }) => <p className="text-lg font-bold mt-1">{children}</p>,
             h2: ({ children }) => <p className="text-base font-bold mt-1">{children}</p>,
             h3: ({ children }) => <p className="text-[15px] font-semibold mt-0.5">{children}</p>,
